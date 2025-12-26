@@ -9,7 +9,7 @@ Learning Kubernetes - starting locally with Minikube, then deploying to GKE.
 - Deploy apps locally
 - Learn core concepts without cloud costs
 
-**Phase 2: Cloud (Later)**
+**Phase 2: Cloud **
 - Create GKE cluster with Terraform
 - Deploy same apps to GKE
 - Add production features
