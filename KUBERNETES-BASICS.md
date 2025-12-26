@@ -348,5 +348,3 @@ Now that you understand the basics, we'll:
 2. Deploy lab02-spring to Kubernetes
 3. Compare the experience with Cloud Run
 4. Add more complex scenarios
-
-Ready to build!
