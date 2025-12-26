@@ -1,59 +1,62 @@
 # GKE Labs
 
-Learning Kubernetes on Google Kubernetes Engine.
+Learning Kubernetes - starting locally with Minikube, then deploying to GKE.
 
-## What This Is
+## Learning Path
 
-Hands-on Kubernetes practice deploying the same apps from [gcp-labs](https://github.com/francopocatino/gcp-labs) to GKE.
+**Phase 1: Local (FREE)**
+- Practice Kubernetes with Minikube
+- Deploy apps locally
+- Learn core concepts without cloud costs
 
-**Goal:** Understand Kubernetes by comparing it to Cloud Run (serverless).
+**Phase 2: Cloud (Later)**
+- Create GKE cluster with Terraform
+- Deploy same apps to GKE
+- Add production features
+- Clean up to avoid costs
 
 ## Structure
 
 ```
 gke-labs/
-├── KUBERNETES-BASICS.md    # Core concepts explained
-├── terraform/              # GKE cluster setup
-├── k8s-manifests/          # Kubernetes YAML files
-│   ├── lab02-spring/
-│   ├── lab06-gcs/
-│   └── lab07-pubsub/
-└── helm-charts/            # Later: Helm packaging
+├── KUBERNETES-BASICS.md    # Core concepts
+├── k8s-manifests/          # YAML files (work on both Minikube & GKE)
+├── terraform/              # GKE cluster setup (use later)
+└── minikube-setup.md       # Local setup guide
 ```
 
 ## Prerequisites
 
-- `gcloud` CLI installed and configured
+- Docker Desktop installed
 - `kubectl` installed
-- GCP project with billing enabled
-- Completed [gcp-labs](https://github.com/francopocatino/gcp-labs) (helpful but not required)
+- `minikube` installed
 
-## Quick Start
+## Quick Start (Minikube)
 
-Coming soon - we'll deploy services to GKE step by step.
+```bash
+# Start local cluster
+minikube start
 
-## Comparison: Cloud Run vs GKE
+# Verify
+kubectl get nodes
 
-| Feature | Cloud Run | GKE (Kubernetes) |
-|---------|-----------|------------------|
-| **Management** | Fully managed | You manage cluster |
-| **Scaling** | Automatic (to zero) | Manual config (min replicas) |
-| **Cost** | Pay per request | Pay for nodes (always running) |
-| **Complexity** | Low | High |
-| **Control** | Limited | Full control |
-| **Best for** | Stateless APIs | Complex apps, batch jobs, specific needs |
+# Deploy first app
+kubectl apply -f k8s-manifests/lab02-spring/
 
-Both are great - just different trade-offs.
+# Access it
+minikube service lab02-spring
+```
 
-## Learning Path
+## Comparison: Minikube vs GKE
 
-1. Kubernetes basics
-2. Deploy first app to GKE
-3. Learn core resources (Pods, Deployments, Services)
-4. Add ConfigMaps and Secrets
-5. CI/CD to GKE
-6. Compare with Cloud Run experience
+| Feature | Minikube | GKE |
+|---------|----------|-----|
+| **Cost** | FREE | ~$7-30/month |
+| **Setup** | Local machine | Cloud cluster |
+| **Kubernetes** | Same concepts | Same concepts |
+| **YAML files** | Identical | Identical |
+| **Use for** | Learning, dev | Production, portfolio |
 
 ---
 
-**Status:** Just started - building as I learn.
+**Current status:** Starting with Minikube. Will add GKE deployment later.
