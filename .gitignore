@@ -1,0 +1,17 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+
+# Kubernetes
+kubeconfig
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
