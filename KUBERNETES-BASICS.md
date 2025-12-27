@@ -1,350 +1,211 @@
-# Kubernetes Basics
+# Kubernetes Notes
 
-Simple explanations of core Kubernetes concepts.
+Personal reference for understanding Kubernetes concepts.
 
-## What Is Kubernetes?
+## What Kubernetes Does
 
-**Container orchestrator** - manages containers across multiple servers.
-
-Think of it as:
-- Docker → runs one container on one machine
-- Kubernetes → runs many containers across many machines
-
-**What it does:**
-- Schedules containers to run on available nodes
-- Restarts failed containers
-- Scales up/down based on load
-- Routes traffic to containers
-- Manages configuration and secrets
+Container orchestrator - manages containers across multiple machines. Handles scheduling, scaling, restarts, networking, and config management.
 
 ---
 
-## Why Kubernetes? (vs Cloud Run)
+## Core Concepts
 
-**Cloud Run:**
-- Google manages everything
-- Just deploy container → done
-- Auto-scales (including to zero)
-- Simple but less control
+### Cluster
+Group of machines (nodes) running Kubernetes. GKE = Google manages the cluster infrastructure.
 
-**Kubernetes:**
-- You manage the cluster
-- More configuration needed
-- Doesn't scale to zero (costs more)
-- Complex but full control
+### Node
+One VM in the cluster. Runs containers, has CPU/RAM/disk. Types:
+- Control plane (manages cluster) - GKE handles
+- Worker nodes (run apps) - I configure
 
-**Use Kubernetes when:**
-- Need specific networking setup
-- Running batch jobs/cron jobs
-- Stateful applications (databases)
-- Want cloud portability (K8s runs everywhere)
-- Need very specific resource control
+### Pod
+Smallest unit in K8s. Usually 1 pod = 1 container. Pods are temporary - they die and get recreated with new IPs.
 
----
+### Deployment
+Manages multiple identical pods (replicas). Handles:
+- Keeping N pods running
+- Rolling updates
+- Rollbacks
+- Self-healing
 
-## Core Concepts (ELI5)
+### Service
+Stable endpoint to access pods. Provides fixed IP/DNS since pod IPs change.
 
-### 1. Cluster
-**What:** Group of machines running Kubernetes
+Types:
+- ClusterIP (internal only)
+- LoadBalancer (external, like Cloud Run URL)
+- NodePort (exposes on node IP:port)
 
-```
-Cluster
-├── Node 1 (server/VM)
-├── Node 2 (server/VM)
-└── Node 3 (server/VM)
-```
+### Ingress
+HTTP(S) load balancer. Routes URLs to services.
 
-**GKE = Google Kubernetes Engine** - Google manages the nodes for you
+### ConfigMap
+Config data (env vars, files). Non-sensitive.
 
----
+### Secret
+Sensitive data (passwords, keys). Encrypted at rest.
 
-### 2. Node
-**What:** One machine (VM) in your cluster
-
-Each node:
-- Runs containers
-- Has CPU, RAM, disk
-- Talks to other nodes
-
-**Types:**
-- Control plane nodes (manage cluster) - GKE handles this
-- Worker nodes (run your apps) - you configure these
+### Namespace
+Virtual clusters within a cluster. Isolate resources (dev/staging/prod).
 
 ---
 
-### 3. Pod
-**What:** Smallest deployable unit in Kubernetes (one or more containers)
+## Cloud Run vs Kubernetes
 
-Usually: 1 pod = 1 container
+| Cloud Run | Kubernetes |
+|-----------|-----------|
+| Zero config | Create cluster, configure everything |
+| Auto-scales (to zero) | Manual scaling (min replicas > 0) |
+| $0 when idle | ~$50-100/month minimum |
+| Simple (one URL) | Complex (services, ingress, networking) |
+| Limited control | Full control |
 
-```
-Pod
-└── Container (your app)
-```
-
-**Key point:** Pods are ephemeral (temporary)
-- They die and get recreated
-- Get new IP addresses
-- Don't store data permanently
-
-Like Cloud Run instances that come and go.
+**When to use K8s:** Need specific orchestration, batch jobs, stateful apps, cloud portability, or hiring requirements.
 
 ---
 
-### 4. Deployment
-**What:** Manages multiple identical Pods
-
-```yaml
-Deployment: "lab02-spring"
-├── Pod 1 (replica)
-├── Pod 2 (replica)
-└── Pod 3 (replica)
-```
-
-**What it does:**
-- Ensures X number of Pods are running (replicas)
-- Rolling updates (deploy new version gradually)
-- Rollback if something breaks
-- Self-healing (restarts failed Pods)
-
-**Similar to:** Cloud Run service (but you control replica count)
-
----
-
-### 5. Service
-**What:** Stable endpoint to access Pods
-
-**Problem:** Pods have changing IPs
-
-**Solution:** Service provides fixed IP/DNS
+## Deployment Flow
 
 ```
-Service "lab02-service"
-  └── Routes to → Pod 1, Pod 2, Pod 3
+Write YAML → kubectl apply → K8s creates pods → Service routes traffic
 ```
 
-**Types:**
-- **ClusterIP** - Internal only (default)
-- **LoadBalancer** - External (like Cloud Run URL)
-- **NodePort** - Exposes on node IP:port
-
----
-
-### 6. Ingress
-**What:** HTTP(S) load balancer routing
-
-Routes URLs to Services:
+vs Cloud Run:
 ```
-https://myapp.com/api  → Service A
-https://myapp.com/web  → Service B
-```
-
-Like Cloud Run routing but more flexible.
-
----
-
-### 7. ConfigMap
-**What:** Configuration stored separately from code
-
-```yaml
-ConfigMap:
-  APP_NAME: "My App"
-  REGION: "us-central1"
-```
-
-Pods read these values as environment variables.
-
-**Similar to:** Cloud Run `--set-env-vars`
-
----
-
-### 8. Secret
-**What:** Sensitive data (passwords, API keys)
-
-Like ConfigMap but encrypted at rest.
-
-```yaml
-Secret:
-  DB_PASSWORD: "encrypted-value"
-```
-
-**Similar to:** Cloud Run `--set-secrets` from Secret Manager
-
----
-
-### 9. Namespace
-**What:** Virtual cluster within cluster
-
-Organize resources:
-```
-Cluster
-├── Namespace: dev
-│   └── Deployment: lab02
-├── Namespace: prod
-│   └── Deployment: lab02
-└── Namespace: default
-```
-
-Isolates resources (dev can't see prod).
-
----
-
-## How It All Works Together
-
-**Example: Deploying lab02-spring**
-
-```
-You write YAML:
-  Deployment: lab02-spring (3 replicas)
-  Service: lab02-service (LoadBalancer)
-  ConfigMap: environment variables
-
-You apply:
-  kubectl apply -f lab02.yaml
-
-Kubernetes does:
-  1. Pulls container image
-  2. Creates 3 Pods on available Nodes
-  3. Creates Service with stable IP
-  4. Creates LoadBalancer (external IP)
-  5. Routes traffic to Pods (load balancing)
-  
-User accesses:
-  http://EXTERNAL-IP → Service → Pod 1, 2, or 3
+gcloud run deploy → done
 ```
 
 ---
 
-## Kubernetes vs Cloud Run
-
-### Deploying a Service
-
-**Cloud Run:**
-```bash
-gcloud run deploy lab02 --source .
-```
-Done. Google handles everything.
-
-**Kubernetes:**
-```yaml
-# 1. Write deployment.yaml
-# 2. Write service.yaml
-# 3. Apply both
-kubectl apply -f deployment.yaml
-kubectl apply -f service.yaml
-```
-
-More work, but more control.
-
----
-
-### Scaling
-
-**Cloud Run:**
-- Automatic (CPU/memory based)
-- Scales to zero
-- No config needed
-
-**Kubernetes:**
-```yaml
-replicas: 3  # Fixed number
-
-# Or auto-scaling:
-minReplicas: 2
-maxReplicas: 10
-targetCPUUtilizationPercentage: 80
-```
-
-Doesn't scale to zero (minimum replicas always running).
-
----
-
-### Updates
-
-**Cloud Run:**
-```bash
-gcloud run deploy lab02 --source .
-```
-
-New revision created, traffic shifted automatically.
-
-**Kubernetes:**
-```bash
-kubectl set image deployment/lab02 app=gcr.io/project/lab02:v2
-```
-
-Rolling update (old Pods gradually replaced).
-
----
-
-## Key Differences Summary
-
-| Aspect | Cloud Run | Kubernetes |
-|--------|-----------|------------|
-| **Setup** | Zero config | Create cluster, configure |
-| **Scaling** | Automatic | Manual (HPA for auto) |
-| **Minimum cost** | $0 (scale to zero) | ~$50-100/month (nodes always on) |
-| **Networking** | Simple (one URL) | Complex (Services, Ingress) |
-| **Updates** | Automatic rollout | Control rolling updates |
-| **Monitoring** | Built-in | Need to configure |
-| **Learning curve** | Easy | Steep |
-
----
-
-## When to Use What
-
-**Use Cloud Run when:**
-- ✅ Stateless HTTP services
-- ✅ Want simple deployment
-- ✅ Cost-sensitive (pay per request)
-- ✅ Don't need custom networking
-
-**Use Kubernetes when:**
-- ✅ Need specific orchestration
-- ✅ Running batch jobs
-- ✅ Complex microservices
-- ✅ Want cloud portability
-- ✅ Need full control
-
-**Real talk:** Most apps don't need Kubernetes complexity. But knowing it makes you more hireable.
-
----
-
-## kubectl Commands (Cheat Sheet)
+## Common Commands
 
 ```bash
-# Get resources
+# View resources
 kubectl get pods
 kubectl get deployments
 kubectl get services
+kubectl get all
 
-# Describe (detailed info)
+# Details
 kubectl describe pod POD_NAME
 
 # Logs
 kubectl logs POD_NAME
-kubectl logs -f POD_NAME  # Follow (tail -f)
+kubectl logs -f POD_NAME
 
-# Apply configuration
+# Apply config
 kubectl apply -f file.yaml
 
-# Delete resources
+# Delete
 kubectl delete -f file.yaml
-kubectl delete pod POD_NAME
 
-# Execute command in pod
+# Shell into pod
 kubectl exec -it POD_NAME -- /bin/bash
 
 # Port forward (local testing)
 kubectl port-forward pod/POD_NAME 8080:8080
+
+# Restart deployment
+kubectl rollout restart deployment/NAME
 ```
 
 ---
 
-## Next Steps
+## YAML Structure (Deployment)
 
-Now that you understand the basics, we'll:
-1. Create a GKE cluster with Terraform
-2. Deploy lab02-spring to Kubernetes
-3. Compare the experience with Cloud Run
-4. Add more complex scenarios
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-name
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app-name
+  template:
+    metadata:
+      labels:
+        app: app-name
+    spec:
+      containers:
+      - name: app
+        image: gcr.io/project/image:tag
+        ports:
+        - containerPort: 8080
+        env:
+        - name: VAR_NAME
+          value: "value"
+```
+
+---
+
+## YAML Structure (Service)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: app-name
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+---
+
+## Key Differences from Cloud Run
+
+**Scaling:**
+- Cloud Run: automatic, to zero
+- K8s: set replicas, doesn't scale to zero
+
+**Updates:**
+- Cloud Run: new revision, automatic rollout
+- K8s: rolling update, manual control
+
+**Networking:**
+- Cloud Run: one URL per service
+- K8s: service + ingress configuration
+
+**Cost:**
+- Cloud Run: pay per request
+- K8s: pay for nodes (always on)
+
+---
+
+## Minikube Commands
+
+```bash
+# Start/stop
+minikube start
+minikube stop
+minikube delete
+
+# Dashboard
+minikube dashboard
+
+# Access service
+minikube service SERVICE_NAME
+
+# SSH into node
+minikube ssh
+
+# Give more resources
+minikube start --cpus=4 --memory=4096
+```
+
+---
+
+## What I'm Learning
+
+1. Start with Minikube (local, free)
+2. Deploy apps from gcp-labs
+3. Understand K8s concepts hands-on
+4. Later: move to GKE (optional)
+
+Same apps, same containers, different orchestration.

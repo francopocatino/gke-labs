@@ -1,110 +1,89 @@
 # Minikube Setup
 
-Get Kubernetes running locally (free).
+Local Kubernetes cluster. Free, runs on laptop.
 
-## Install Minikube
+## Installation
 
-**macOS:**
 ```bash
+# macOS
 brew install minikube
-```
-
-**Verify:**
-```bash
-minikube version
-```
-
-## Install kubectl (if not already installed)
-
-```bash
 brew install kubectl
+
+# Verify
+minikube version
+kubectl version --client
 ```
 
-## Start Your First Cluster
+## Core Commands
 
 ```bash
-# Start Minikube
+# Start cluster (creates VM, installs K8s, configures kubectl)
 minikube start
 
-# This creates a local Kubernetes cluster
-# Takes 1-2 minutes first time
-```
-
-**What it does:**
-- Creates a VM (Docker or VirtualBox)
-- Installs Kubernetes inside
-- Configures kubectl to use it
-
-## Verify It Works
-
-```bash
-# Check cluster is running
-kubectl cluster-info
-
-# See your node
-kubectl get nodes
-
-# Should show:
-# NAME       STATUS   ROLE           AGE   VERSION
-# minikube   Ready    control-plane  30s   v1.28.x
-```
-
-## Basic Commands
-
-```bash
-# Start cluster
-minikube start
-
-# Stop cluster (keeps data)
+# Stop (keeps data)
 minikube stop
 
-# Delete cluster (removes everything)
+# Delete (removes everything)
 minikube delete
 
-# Open dashboard (web UI)
+# Status
+kubectl cluster-info
+kubectl get nodes
+
+# Dashboard (web UI)
 minikube dashboard
 
-# SSH into the node
+# SSH into node
 minikube ssh
 ```
 
-## Test Deployment
+## Quick Test
 
 ```bash
-# Create a simple deployment
+# Deploy nginx
 kubectl create deployment hello --image=nginx
 
-# See it running
+# Check status
 kubectl get deployments
 kubectl get pods
 
-# Expose it
+# Expose as service
 kubectl expose deployment hello --type=NodePort --port=80
 
-# Access it
+# Access in browser
 minikube service hello
 ```
 
-## Common Issues
+## Resource Allocation
 
-**"minikube start" fails:**
-- Make sure Docker Desktop is running
-- Try: `minikube start --driver=docker`
-
-**kubectl not working:**
 ```bash
-# Point kubectl to minikube
-minikube update-context
-```
+# Default: 2 CPUs, 2GB RAM
+minikube start
 
-**Cluster too slow:**
-```bash
-# Give it more resources
+# Custom resources
 minikube start --cpus=4 --memory=4096
 ```
 
-## Ready to Learn
+## Troubleshooting
 
-Now you have a local Kubernetes cluster!
+**Start fails:**
+- Ensure Docker Desktop is running
+- Try: `minikube start --driver=docker`
 
-Next: Deploy lab02-spring to Minikube
+**kubectl can't connect:**
+```bash
+minikube update-context
+```
+
+**Image pull issues:**
+```bash
+# Use Minikube's Docker daemon
+eval $(minikube docker-env)
+```
+
+## Notes
+
+- First start takes 1-2 minutes
+- Cluster runs in VM (Docker or VirtualBox)
+- kubectl auto-configured to use Minikube context
+- Stop when not in use (saves battery/resources)
